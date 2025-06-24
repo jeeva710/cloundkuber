@@ -1,0 +1,36 @@
+apiversion: v1
+kind: Deployment
+metadata:
+  name: node Implementation
+spec: 
+ replicas: 3
+  containers:
+    - name: node app
+      image: jeeva10/nodeapplication:latest
+      ports:
+        -containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "64m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+  - name: Deploy via SSH
+    uses: appleboy/ssh-action@v1.0.0
+    with:
+      host: ${{ secrets.SERVER_HOST }}
+      username: ${{ secrets.SERVER_USER }}
+      key: ${{ secrets.SERVER_SSH_KEY }}
+      script: |
+            docker pull jeeva10/employeemanagement:latest
+            docker network create employee-network1
+            docker stop employeedb || true
+            docker rm employeedb || true
+            docker run -d --name employeedb   --network employee-network   -e POSTGRES_DB=employeedetails   -e POSTGRES_USER=postgres   -e POSTGRES_PASSWORD=1234   -p 5432:5432 postgres:15
+            docker run --d --name nodeapp --newtwork employee-network -p 80:80 node:18.18.1
+            
+
+
+        
+      
